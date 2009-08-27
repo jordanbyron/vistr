@@ -1,0 +1,15 @@
+= Vistr: Slip Beyond the JS Hell of Blackboard Vista
+
+Vistr is an attempt at creating a Ruby API for Blackboard Vista: An online, 
+JS-laden e-learning system.
+
+== The deal
+
+Most likely this won't work because of the extreme reliance on javascript.
+
+== Why?
+
+I'm taking an online course this semester and therefore using Vista. Rather
+than constantly logging in to check assignments / updated notes I'd love to
+create a nice, programmable interface that I can interact with. Make the system
+work for me rather than against me.
