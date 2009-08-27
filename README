@@ -1,4 +1,4 @@
-= Vistr: Slip Beyond the JS Hell of Blackboard Vista
+= Vistr: Ruby API for Blackboard Vista 
 
 Vistr is an attempt at creating a Ruby API for Blackboard Vista: An online, 
 JS-laden e-learning system.
