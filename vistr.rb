@@ -4,11 +4,14 @@ require 'net/http'
 require 'net/https'
 # require 'open-uri'
 require 'hpricot'
+require 'activesupport'
 
 class Vistr
-
+  attr_accessor :cookie
+  
   def initialize
-    @uri = URI.parse("https://vista.csus.ct.edu/webct")
+    @uri = URI.parse("vista.csus.ct.edu/webct")
+    @http = Net::HTTP
   end
   
   def login username, password
@@ -22,43 +25,50 @@ class Vistr
     'webctid' => "#{username}",
     'password' => "#{password}")
   end
-
-  def url_for(path)
-    return "#{@uri}/#{path}"
-  end
-
-  def post(path, data = {})
-    url = URI.parse(url_for(path))
-    
-    req = Net::HTTP::Post.new url.path
-    req.set_form_data data
-    
-    http = Net::HTTP.new(url.host,url.port)
-    http.use_ssl = true
-    
-    result = http.request(req)
-    
-    result.body
-  end
-
-  def get(path = nil, options = {})
-    perform_request(options) { Net::HTTP::Get.new(url_for(path)) }
-  end
   
-  def perform_request(options = {}, &block)
-    @request = prepare_request(yield, options)
-    http = @http.new(uri.host, uri.port)
-    @response = returning http.request(@request)
+  def course_list
+    get "manageCourseList.dowebct"
   end
-  
-  def flatten(params)
-    params = params.dup
-    params.stringify_keys!.each do |k,v| 
-      if v.is_a? Hash
-        params.delete(k)
-        v.each {|subk,v| params["#{k}[#{subk}]"] = v }
-      end
+
+  def url_for(path, options={})
+    url = "#{@uri}/#{path}"
+    
+    if options[:use_ssl]
+      url = "https://#{url}" 
+    else
+      url = "http://#{url}"
     end
+    
+    return url
   end
+
+  private
+
+    def post(path, data = {})
+      url = URI.parse(url_for(path, :use_ssl => true))
+      
+      req = Net::HTTP::Post.new url.path
+      req.set_form_data data
+      
+      http = Net::HTTP.new(url.host,url.port)
+      http.use_ssl = true
+      
+      response = http.request(req)
+      
+      @cookie = response['set-cookie'] if response['set-cookie']
+      
+      response
+    end
+
+    def get(path = nil, options = {})
+      url = URI.parse(url_for(path))
+      
+      request = Net::HTTP::Get.new url.path
+      request.add_field 'Cookie', @cookie if @cookie
+      
+      http = Net::HTTP.new(url.host,url.port)
+      
+      response = http.request(request)
+    end
 
 end
