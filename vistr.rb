@@ -30,6 +30,8 @@ class Vistr
     end
     
     classes
+    
+  end
 end
 
 class WWW::Mechanize::Util
