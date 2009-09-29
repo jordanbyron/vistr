@@ -3,7 +3,7 @@ require 'mechanize'
 require 'logger'
 
 class Vistr
-
+  
   def initialize
     @url = "vista.csus.ct.edu/webct"
     @agent = WWW::Mechanize.new { |a| a.log = Logger.new("vistr.log") }
@@ -29,12 +29,7 @@ class Vistr
       classes << link.content if link.content.length > 0
     end
     
-    classes
-  end
 end
-
-
-
 
 class WWW::Mechanize::Util
   def self.build_query_string(parameters, enc=nil)
