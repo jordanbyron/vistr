@@ -34,6 +34,9 @@ class Vistr
   end
 end
 
+
+## FIXME: Use aliasing rather than blowing over the existing method
+
 class WWW::Mechanize::Util
   def self.build_query_string(parameters, enc=nil)
     parameters.map { |k,v|
