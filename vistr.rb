@@ -29,6 +29,7 @@ class Vistr
       classes << link.content if link.content.length > 0
     end
     
+    classes
 end
 
 class WWW::Mechanize::Util
