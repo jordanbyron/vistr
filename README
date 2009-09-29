@@ -14,3 +14,11 @@ simple to start getting at the meat of vista (Assignments, threads, mail, etc.)
 I'm taking an online course this semester and therefore using Vista. Rather
 than constantly logging in to check assignments / updated notes I'd love to
 create a nice, programmable interface that I can interact with.
+
+== TODO
+
+# Enable Vistr to access institutions other than Southern (Dynamically load 
+glcid and institution name)
+# Make sure login is using SSL properly
+# Access course materials (Assignments, message threads, etc)
+# Access vista mail

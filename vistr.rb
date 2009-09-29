@@ -10,6 +10,8 @@ class Vistr
   end
   
   def login username, password
+    # FIXME: Verify this is using SSL
+    
     page = @agent.post("https://#{@url}/authenticateUser.dowebct",
                       'glcid'           => "URN:X-WEBCT-VISTA-V1:21fcd19f-0a62-04bb-0011-18e6329eb151",
                       'insId'           => "129143011",
