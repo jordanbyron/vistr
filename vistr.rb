@@ -1,64 +1,51 @@
 require 'rubygems'
-require 'uri'
-require 'net/http'
-require 'net/https'
-# require 'open-uri'
-require 'hpricot'
+require 'mechanize'
+require 'logger'
 
 class Vistr
 
   def initialize
-    @uri = URI.parse("https://vista.csus.ct.edu/webct")
+    @url = "vista.csus.ct.edu/webct"
+    @agent = WWW::Mechanize.new { |a| a.log = Logger.new("vistr.log") }
   end
   
   def login username, password
-    @username = username
-    result = post("authenticateUser.dowebct", 'loginDisplay' => 'true', 
-    'glcid' => "URN:X-WEBCT-VISTA-V1:21fcd19f-0a62-04bb-0011-18e6329eb151",
-    'insID' => "129143011",
-    'gotoid' => "null",
-    'insName' => "Southern Connecticut State University",
-    'timeZoneOffset' => '4',
-    'webctid' => "#{username}",
-    'password' => "#{password}")
-  end
-
-  def url_for(path)
-    return "#{@uri}/#{path}"
-  end
-
-  def post(path, data = {})
-    url = URI.parse(url_for(path))
-    
-    req = Net::HTTP::Post.new url.path
-    req.set_form_data data
-    
-    http = Net::HTTP.new(url.host,url.port)
-    http.use_ssl = true
-    
-    result = http.request(req)
-    
-    result.body
-  end
-
-  def get(path = nil, options = {})
-    perform_request(options) { Net::HTTP::Get.new(url_for(path)) }
+    page = @agent.post("https://#{@url}/authenticateUser.dowebct",
+                      'glcid'           => "URN:X-WEBCT-VISTA-V1:21fcd19f-0a62-04bb-0011-18e6329eb151",
+                      'insId'           => "129143011",
+                      'gotoid'          => "null",
+                      'insName'         => "Southern+Connecticut+State+University",
+                      'timeZoneOffset'  => '4',
+                      'webctid'         => "#{username}",
+                      'password'        => "#{password}")
   end
   
-  def perform_request(options = {}, &block)
-    @request = prepare_request(yield, options)
-    http = @http.new(uri.host, uri.port)
-    @response = returning http.request(@request)
-  end
-  
-  def flatten(params)
-    params = params.dup
-    params.stringify_keys!.each do |k,v| 
-      if v.is_a? Hash
-        params.delete(k)
-        v.each {|subk,v| params["#{k}[#{subk}]"] = v }
-      end
+  def course_list
+    classes = Array.new
+    
+    page = @agent.get "http://#{@url}/populateMyWebCT.dowebct"
+    
+    page.search("//ul[@class='courselist']/li/a").each do |link|
+      classes << link.content if link.content.length > 0
     end
+    
+    classes
   end
+end
 
+
+
+
+class WWW::Mechanize::Util
+  def self.build_query_string(parameters, enc=nil)
+    parameters.map { |k,v|
+      if k
+        [CGI.escape(k.to_s), dash_escape(CGI.escape(v.to_s))].join("=")
+      end
+    }.compact.join('&')
+  end
+  
+  def self.dash_escape value
+    value.gsub("-","%2D")
+  end
 end
