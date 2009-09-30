@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'mechanize'
 require 'logger'
-#require 'vistr/course'
+require 'course'
 
 class Vistr
   
@@ -14,7 +14,7 @@ class Vistr
   end
   
   def login username, password    
-    page = @agent.post("https://#{@url}/authenticateUser.dowebct",
+    page = @agent.post(vista_url("authenticateUser.dowebct",true),
                       'glcid'           => "URN:X-WEBCT-VISTA-V1:21fcd19f-0a62-04bb-0011-18e6329eb151",
                       'insId'           => "129143011",
                       'gotoid'          => "null",
@@ -25,16 +25,31 @@ class Vistr
   end
   
   def course_list
-    classes = Array.new
+    courses = Array.new
+    course_id_regex = /\/webct\/urw\/(\S*)\//
     
-    page = @agent.get "http://#{@url}/populateMyWebCT.dowebct"
+    page = @agent.get vista_url("populateMyWebCT.dowebct")
     
     page.search("//ul[@class='courselist']/li/a").each do |link|
-      classes << link.content if link.content.length > 0
+      if link.content.length > 0 && course_id_regex.match(link['href'])
+        course = Course.new link.content, 
+                            course_id_regex.match(link['href']).captures[0]
+                            
+        courses << course
+      end
     end
     
-    classes
+    courses
+  end
+  
+  def find_course_by_name(course_name)
+    course_regex = Regexp.new(course_name)
     
+    course_list.each do |course|
+      return course if course.name[course_regex]
+    end
+    
+    nil
   end
   
   def assignments
@@ -42,31 +57,34 @@ class Vistr
     assignments = Array.new
     
     courses.each do |course|
-      assignments << course_assignments(course)
+      assignments << course_assignments(course.name)
     end
     
     assignments.compact
   end
   
-  def course_assignments(course)
-    page = @agent.get "http://#{@url}/populateMyWebCT.dowebct"
-    course_regex = Regexp.new(course)
-    course_id_regex = /\/webct\/urw\/(\S*)\//
-    course_id = ""
+  def course_assignments(course_name)
+    course = find_course_by_name(course_name)
     assignments = Array.new
-    
-    page.search("//ul[@class='courselist']/li/a").each do |link|
-      course_id = course_id_regex.match(link['href']).captures[0] if link.content[course_regex] && course_id_regex.match(link['href'])
-    end
 
-    course_page = @agent.get "http://#{@url}/urw/#{course_id}/studentViewSubmissions.dowebct?viewType=INBOX"
+    course_page = @agent.get vista_url("urw/#{course.id}/studentViewSubmissions.dowebct?viewType=INBOX")
     
     course_page.search("//table[@class='inventorytable']//a[@title='Edit']").each do |link|
       due = /\(Due([^\)]*)/.match(link.parent.parent.search("//div[@class='descript']").first.content.gsub("\n","")).captures[0]
       assignments << [link.content.strip, due] if link.content.length > 0
     end
     
-    assignments.compact
+    assignments if assignments.length > 0
+  end
+  
+  private
+  
+  def vista_url(path, ssl=false)
+    if ssl
+      "https://#{@url}/#{path}"
+    else
+      "http://#{@url}/#{path}"
+    end
   end
 end
 
