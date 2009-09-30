@@ -3,11 +3,18 @@
 Vistr is an attempt at creating a Ruby API for Blackboard Vista: An online, 
 JS-laden e-learning system.
 
-== Progress
+== Requires
 
-Despite the high reliance on javascript, I've had moderate success at logging in
-and accessing basic information. With these hurdles overcome it should be fairly
-simple to start getting at the meat of vista (Assignments, threads, mail, etc.)
+mechanize
+
+  sudo gem install mechanize
+  
+== Use
+
+  v = Vistr.new
+  v.login "username", "password"
+  v.course_list   # Returns courses you are enrolled in
+  v.assignments   # Returns all assignments
 
 == Why?
 
@@ -19,6 +26,5 @@ create a nice, programmable interface that I can interact with.
 
 # Enable Vistr to access institutions other than Southern (Dynamically load 
 glcid and institution name)
-# Make sure login is using SSL properly
 # Access course materials (Assignments, message threads, etc)
 # Access vista mail
